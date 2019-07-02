@@ -115,18 +115,18 @@ public class ServerBO {
             String time = sdf.format(new Date());
             messageLf = time + " " + message.getMessage() + "\n";
             message.setMessage(messageLf);
-        }                     
-            serverView.appendRoom(messageLf);
+        }
+        serverView.appendRoom(messageLf);
             // we loop in reverse order in case we would have to remove a Client
-            // because it has disconnected
-            for (int i = listClient.size(); --i >= 0;) {
-                ClientThread ct = listClient.get(i);
-                // try to write to the Client if it fails remove it from the list
-                if (!ct.writeMsg(message)) {
-                    listClient.remove(i);
-                    display("Disconnected Client " + ct.username + " removed from list.\n");
-                }
+        // because it has disconnected
+        for (int i = listClient.size(); --i >= 0;) {
+            ClientThread ct = listClient.get(i);
+            // try to write to the Client if it fails remove it from the list
+            if (!ct.writeMsg(message)) {
+                listClient.remove(i);
+                display("Disconnected Client " + ct.username + " removed from list.\n");
             }
+        }
 
     }
 
@@ -170,8 +170,7 @@ public class ServerBO {
             } catch (IOException e) {
                 display("Exception creating new Input/output Streams: " + e);
                 return;
-            } 
-            catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
             date = new Date().toString() + "\n";
@@ -203,26 +202,28 @@ public class ServerBO {
                         break;
                     case ChatMessage.LOGOUT:
                         display(username + " đã đăng xuất.");
-                        String messageSend = ">>>> Hệ thống: " + username + " đã đăng xuất.";
+                        String messageSend = ">> [Hệ thống]: " + username + " đã đăng xuất.";
+                        remove(id);
                         listUser.clear();
-                        for(ClientThread item : listClient){
-                            listUser.add(item.username);                            
-                        }
-                        broadcast(new ChatMessage(ChatMessage.LOGOUT,messageSend , username, listUser));
+                        listClient.stream().forEach((item) -> {
+                            listUser.add(item.username);
+                        });
+                        broadcast(new ChatMessage(ChatMessage.LOGOUT, messageSend, username, listUser));
                         keepGoing = false;
+
                         break;
                     case ChatMessage.ONLINE:
-                        message = ">>>> Hệ thống: " + username + " đã đăng nhập.";
+                        message = ">> [Hệ thống]: " + username + " đã đăng nhập.";
                         listUser.clear();
-                        for(ClientThread item : listClient){
-                            listUser.add(item.username);                          
+                        for (ClientThread item : listClient) {
+                            listUser.add(item.username);
                         }
                         broadcast(new ChatMessage(ChatMessage.ONLINE, message, username, listUser));
-                        break;                    
+                        break;
                 }
             }
             // remove myself from the arrayList containing the list of the connected Clients
-            remove(id);
+            //remove(id);
             close();
         }
 
@@ -240,7 +241,7 @@ public class ServerBO {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }            
+            }
         }
 
         /*

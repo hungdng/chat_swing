@@ -44,7 +44,7 @@ public class SettingView extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         txtServer = new javax.swing.JTextField();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -115,10 +115,10 @@ public class SettingView extends javax.swing.JFrame {
 
         try {
             String content = txtPort.getText();
-            StringBuilder contentStr = new StringBuilder(txtServer.getText().trim()+ "\n");
-            contentStr.append(txtPort.getText().trim());
             try {
                 Integer.parseInt(content);
+                StringBuilder contentStr = new StringBuilder(txtServer.getText().trim() + "\n");
+                contentStr.append(txtPort.getText().trim());
                 Files.write(Paths.get(pathFile), contentStr.toString().getBytes());
                 JOptionPane.showMessageDialog(this, "Cấu hình thành công.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             } catch (NumberFormatException e) {
@@ -138,13 +138,13 @@ public class SettingView extends javax.swing.JFrame {
             try {
                 String ipStr = Files.lines(Paths.get(pathFile)).skip(lineNumber - 1).findFirst().get();
                 String portStr = Files.lines(Paths.get(pathFile)).skip(lineNumber).findFirst().get();
-                txtPort.setText(portStr);   
+                txtPort.setText(portStr);
                 txtServer.setText(ipStr);
 
             } catch (IOException e) {
                 System.out.println("Lỗi: " + e.getMessage());
             }
-        } 
+        }
         txtServer.requestFocus();
     }//GEN-LAST:event_formWindowOpened
 

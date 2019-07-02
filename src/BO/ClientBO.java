@@ -20,9 +20,8 @@ import java.net.UnknownHostException;
  */
 public class ClientBO {
 
-    // for I/O
-    private ObjectInputStream sInput;		// to read from the socket
-    private ObjectOutputStream sOutput;		// to write on the socket
+    private ObjectInputStream sInput;
+    private ObjectOutputStream sOutput;	
     private Socket socket;
 
     // if I use a GUI or not
@@ -31,7 +30,6 @@ public class ClientBO {
     // the server, the port and the username
     private String server, username;
     private int port;
-    InetAddress ipAddr;
 
     public ClientBO(ClientView clientView, String server, String username, int port) {
         this.clientView = clientView;
@@ -45,7 +43,7 @@ public class ClientBO {
     }
 
     /*
-	 * To start the dialog
+     * To start the dialog
      */
     public boolean start() {
         // try to connect to the server
@@ -84,15 +82,8 @@ public class ClientBO {
         return true;
     }
 
-    /*
-	 * To send a message to the console or the GUI
-     */
     private void display(String msg) {
-        if (clientView == null) {
-            System.out.println(msg);      // println in console mode
-        } else {
-            clientView.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
-        }
+       clientView.append(msg + "\n");
     }
 
     private void display(ChatMessage msg) {
@@ -100,40 +91,34 @@ public class ClientBO {
     }
 
     /*
-	 * To send a message to the server
+     * To send a message to the server
      */
     public void sendMessage(ChatMessage msg) {
         try {
             sOutput.writeObject(msg);
         } catch (IOException e) {
-            e.printStackTrace();
-//            display("Exception writing to server: " + e);
+//            e.printStackTrsace();
+            display("Exception writing to server: " + e);
         }
     }
 
     /*
-	 * When something goes wrong
-	 * Close the Input/Output streams and disconnect not much to do in the catch clause
+     * When something goes wrong
+     * Close the Input/Output streams and disconnect not much to do in the catch clause
      */
     private void disconnect() {
         try {
             if (sInput != null) {
                 sInput.close();
             }
-        } catch (Exception e) {
-        } // not much else I can do
-        try {
             if (sOutput != null) {
                 sOutput.close();
             }
-        } catch (Exception e) {
-        } // not much else I can do
-        try {
             if (socket != null) {
                 socket.close();
             }
         } catch (Exception e) {
-        } // not much else I can do
+        }
 
         // inform the GUI
         if (clientView != null) {
@@ -142,34 +127,6 @@ public class ClientBO {
 
     }
 
-    /*
-	 * To start the Client in console mode use one of the following command
-	 * > java Client
-	 * > java Client username
-	 * > java Client username portNumber
-	 * > java Client username portNumber serverAddress
-	 * at the console prompt
-	 * If the portNumber is not specified 1500 is used
-	 * If the serverAddress is not specified "localHost" is used
-	 * If the username is not specified "Anonymous" is used
-	 * > java Client 
-	 * is equivalent to
-	 * > java Client Anonymous 1500 localhost 
-	 * are eqquivalent
-	 * 
-	 * In console mode, if an error occurs the program simply stops
-	 * when a GUI id used, the GUI is informed of the disconnection
-     */
-    public String getIP() {
-        try {
-            ipAddr = InetAddress.getLocalHost();
-            System.out.println(ipAddr.getHostAddress());
-
-        } catch (UnknownHostException ex) {
-            ex.printStackTrace();
-        }
-        return ipAddr.getHostAddress() + "";
-    }
 
     class ListenFromServer extends Thread {
 
@@ -178,23 +135,22 @@ public class ClientBO {
             while (true) {
                 try {
                     ChatMessage msg = (ChatMessage) sInput.readObject();
-                    
+
                     if (msg.getType() == ChatMessage.LOGOUT || msg.getType() == ChatMessage.ONLINE) {
                         if (!username.equalsIgnoreCase(msg.getUsername())) {
                             clientView.append(msg.getMessage());
-                        }                        
+                        }
                         clientView.loadData(msg.getListUser());
-                    }else{
+                    } else {
                         clientView.append(msg.getMessage());
-                    }                    
+                    }
                 } catch (IOException e) {
                     display("Server has close the connection.");
                     if (clientView != null) {
                         clientView.connectionFailed();
                     }
                     break;
-                }
-                catch (ClassNotFoundException e2) {
+                } catch (ClassNotFoundException e2) {
                 }
             }
         }

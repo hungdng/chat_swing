@@ -6,6 +6,7 @@
 package View;
 
 import BO.ClientBO;
+import Bean.UserBean;
 import Utils.ChatMessage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -20,53 +21,36 @@ public class ClientView extends javax.swing.JFrame {
 
     private boolean connected;
     private ClientBO clientBO;
-    private final int defaultPort;
-    private final String defaultHost;
-    InetAddress ipAddr;
     private String username = "";
-//    private ArrayList<String> listUserStr;
 
     /**
      * Creates new form ChatView
      *
      * @param host
      * @param port
+     * @param user
      */
-    public ClientView(String host, int port) {
-        initComponents();
-//        listUserStr = new ArrayList<>();
-        defaultPort = port;
-        defaultHost = host;
-        txtIPServer.setEditable(true);
-        txtPortServer.setEditable(true);
-        txtIPServer.setEnabled(true);
-        txtPortServer.setEnabled(true);
-        txtPortServer.requestFocus();
-        btnLogOut.setEnabled(false);
+    public ClientView(String host, int port, UserBean user) {
+        initComponents();        
+        username = user.getUsername();
+        clientBO = new ClientBO(this, host, username, port);
+        clientBO.start();
+        connected = true;
+        ChatMessage message = new ChatMessage(ChatMessage.ONLINE, username);
+        clientBO.sendMessage(message);
+        txtContent.requestFocus();
 
-        txtUsername.setText(getIP());
     }
     
-    public void loadData(ArrayList<String> listUserStr) {        
+    public void loadData(ArrayList<String> listUserStr) {    
+        listUser.removeAll();
         DefaultListModel model = new DefaultListModel();
         listUserStr.forEach((usernameStr) -> {
             if (!usernameStr.equalsIgnoreCase(username)) {
                 model.addElement(usernameStr);
             }
-            
         });
         listUser.setModel(model);
-    }
-
-    public String getIP() {
-        try {
-            ipAddr = InetAddress.getLocalHost();
-            System.out.println(ipAddr.getHostAddress());
-
-        } catch (UnknownHostException ex) {
-            ex.printStackTrace();
-        }
-        return ipAddr.getHostAddress() + "";
     }
 
     // called by the Client to append text in the TextArea 
@@ -79,20 +63,7 @@ public class ClientView extends javax.swing.JFrame {
     // called by the GUI is the connection failed
     // we reset our buttons, label, textfield
     public void connectionFailed() {
-        btnLogin.setEnabled(true);
-        btnLogOut.setEnabled(false);
-        btnWhoIsOnline.setEnabled(false);
-        lblUsername.setText("Enter your username below");
-        txtUsername.setText(getIP());
-        // reset port number and host name as a construction time
-        txtPortServer.setText("" + defaultPort);
-        txtIPServer.setText(defaultHost);
-        // let the user change them
-        txtIPServer.setEditable(true);
-        txtPortServer.setEditable(true);
-        txtPortServer.requestFocus();
         connected = false;
-
     }
 
     /**
@@ -105,28 +76,19 @@ public class ClientView extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        listUser = new javax.swing.JList<>();
+        listUser = new javax.swing.JList<String>();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtLog = new javax.swing.JTextArea();
         txtContent = new javax.swing.JTextField();
         btnSend = new javax.swing.JButton();
-        txtIPServer = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
-        txtPortServer = new javax.swing.JTextField();
-        btnLogin = new javax.swing.JButton();
         btnLogOut = new javax.swing.JButton();
-        btnWhoIsOnline = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
-        txtUsername = new javax.swing.JTextField();
-        lblUsername = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        listUser.setModel(new javax.swing.AbstractListModel<String>() {
+        listUser.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+            public Object getElementAt(int i) { return strings[i]; }
         });
         jScrollPane1.setViewportView(listUser);
 
@@ -135,15 +97,9 @@ public class ClientView extends javax.swing.JFrame {
         jScrollPane2.setViewportView(txtLog);
 
         btnSend.setText("Send");
-
-        jLabel1.setText("IP Server: ");
-
-        jLabel2.setText("Port:");
-
-        btnLogin.setText("Login");
-        btnLogin.addActionListener(new java.awt.event.ActionListener() {
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnLoginActionPerformed(evt);
+                btnSendActionPerformed(evt);
             }
         });
 
@@ -153,23 +109,6 @@ public class ClientView extends javax.swing.JFrame {
                 btnLogOutActionPerformed(evt);
             }
         });
-
-        btnWhoIsOnline.setText("Who is Online");
-        btnWhoIsOnline.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnWhoIsOnlineActionPerformed(evt);
-            }
-        });
-
-        jLabel3.setText("Username: ");
-
-        txtUsername.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtUsernameActionPerformed(evt);
-            }
-        });
-
-        lblUsername.setText("lblUsername");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -185,32 +124,9 @@ public class ClientView extends javax.swing.JFrame {
                         .addComponent(txtContent)
                         .addGap(18, 18, 18)
                         .addComponent(btnSend))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(btnWhoIsOnline)
-                        .addGap(30, 30, 30)
-                        .addComponent(btnLogin)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnLogOut)
-                        .addGap(103, 103, 103))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addGap(18, 18, 18)
-                                .addComponent(txtIPServer, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addGap(18, 18, 18)
-                                .addComponent(txtUsername)))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addGap(18, 18, 18)
-                                .addComponent(txtPortServer, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(lblUsername))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnLogOut)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -228,105 +144,24 @@ public class ClientView extends javax.swing.JFrame {
                             .addComponent(txtContent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(btnSend))
                         .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtIPServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2)
-                            .addComponent(txtPortServer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblUsername))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btnLogin)
-                            .addComponent(btnLogOut)
-                            .addComponent(btnWhoIsOnline))
-                        .addGap(20, 20, 20))))
+                        .addComponent(btnLogOut)
+                        .addContainerGap(96, Short.MAX_VALUE))))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        // ok it is a connection request
-        username = txtUsername.getText().trim();
-        // empty username ignore it
-        if (username.length() == 0) {
-            return;
-        }
-        // empty serverAddress ignore it
-        String server = txtIPServer.getText().trim();
-        if (server.length() == 0) {
-            return;
-        }
-        // empty or invalid port numer, ignore it
-        String portNumber = txtPortServer.getText().trim();
-        if (portNumber.length() == 0) {
-            return;
-        }
-        int port = 0;
-        try {
-            port = Integer.parseInt(portNumber);
-        } catch (Exception en) {
-            return;   // nothing I can do if port number is not valid
-        }
-
-        // try creating a new Client with GUI
-        clientBO = new ClientBO(this, server, username, port);
-        // test if we can start the Client
-        if (!clientBO.start()) {
-            return;
-        }
-        txtIPServer.setText("");
-        txtUsername.setText("Enter your message below");
-        connected = true;
-
-        // disable login button
-        btnLogin.setEnabled(false);
-
-        // enable the 2 buttons
-        btnLogOut.setEnabled(true);
-        btnWhoIsOnline.setEnabled(true);
-        // disable the Server and Port JTextField
-        txtIPServer.setEditable(false);
-        txtPortServer.setEditable(false);
-
-        ChatMessage message = new ChatMessage(ChatMessage.ONLINE, username);
-        clientBO.sendMessage(message);
-
-        // Action listener for when the user enter a message
-        //tf.addActionListener(this);
-    }//GEN-LAST:event_btnLoginActionPerformed
-
     private void btnLogOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogOutActionPerformed
-        // TODO add your handling code here:
-        System.out.println("Status Connected :" + connected);
         clientBO.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
-        txtIPServer.setEditable(true);
-        txtPortServer.setEditable(true);
-        txtIPServer.setEnabled(connected);
-        txtPortServer.setEnabled(connected);
-
-        txtUsername.setText("(IP) " + getIP());
+        this.dispose();
     }//GEN-LAST:event_btnLogOutActionPerformed
 
-    private void btnWhoIsOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWhoIsOnlineActionPerformed
-        // TODO add your handling code here:
-        clientBO.sendMessage(new ChatMessage(ChatMessage.ONLINE, ""));
-    }//GEN-LAST:event_btnWhoIsOnlineActionPerformed
-
-    private void txtUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsernameActionPerformed
-        // TODO add your handling code here:
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
         if (connected) {
-            // just have to send the message
-            ChatMessage message = new ChatMessage(ChatMessage.MESSAGE, txtUsername.getText());
+            ChatMessage message = new ChatMessage(ChatMessage.MESSAGE, txtContent.getText());
             clientBO.sendMessage(message);
-            txtUsername.setText("");
-            return;
         }
-    }//GEN-LAST:event_txtUsernameActionPerformed
+    }//GEN-LAST:event_btnSendActionPerformed
 
     /**
      * @param args the command line arguments
@@ -360,27 +195,18 @@ public class ClientView extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new ClientView("localhost", 1000).setVisible(true);
+                new ClientView("localhost", 9000, null).setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnLogOut;
-    private javax.swing.JButton btnLogin;
     private javax.swing.JButton btnSend;
-    private javax.swing.JButton btnWhoIsOnline;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JLabel lblUsername;
     private javax.swing.JList<String> listUser;
     private javax.swing.JTextField txtContent;
-    private javax.swing.JTextField txtIPServer;
     private javax.swing.JTextArea txtLog;
-    private javax.swing.JTextField txtPortServer;
-    private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }

@@ -20,6 +20,8 @@ public interface IUserDAO {
     
     Optional<UserBean> getByUsername(String username) throws Exception;
     
+    Optional<UserBean> login(String username, String password) throws Exception;
+    
     UserBean add(UserBean user) throws Exception;
     
     boolean update(UserBean user) throws Exception;

@@ -5,17 +5,31 @@
  */
 package View;
 
+import BO.UserBO;
+import Bean.UserBean;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author hung.tran
  */
 public class LoginView extends javax.swing.JFrame {
 
+    private final String pathFile = "C:\\chat\\portapp.txt";
+    private final String pathFolder = "C:\\chat";
+    UserBO userBO;
     /**
      * Creates new form LoginView
      */
     public LoginView() {
         initComponents();
+        userBO = new UserBO();
     }
 
     /**
@@ -39,6 +53,11 @@ public class LoginView extends javax.swing.JFrame {
         btnSetting = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
 
         jLabel1.setText("UserName:");
 
@@ -48,8 +67,18 @@ public class LoginView extends javax.swing.JFrame {
         jLabel3.setText("Chat");
 
         btnLogin.setText("Login");
+        btnLogin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLoginActionPerformed(evt);
+            }
+        });
 
         btnClose.setText("Close");
+        btnClose.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloseActionPerformed(evt);
+            }
+        });
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -72,6 +101,11 @@ public class LoginView extends javax.swing.JFrame {
         });
 
         btnSetting.setText("Settings");
+        btnSetting.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSettingActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -141,6 +175,73 @@ public class LoginView extends javax.swing.JFrame {
         // TODO add your handling code here:
         new RegistrationView().setVisible(true);
     }//GEN-LAST:event_btnRegistrationActionPerformed
+
+    private void btnSettingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSettingActionPerformed
+        // TODO add your handling code here:
+        new SettingView().setVisible(true);
+    }//GEN-LAST:event_btnSettingActionPerformed
+
+    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+    }//GEN-LAST:event_btnCloseActionPerformed
+
+    private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
+        boolean fileExists = Files.exists(Paths.get(pathFile));
+        String ipStr = "localhost";
+        int portServer = 9000;
+        if (fileExists) {
+            int lineNumber = 1;
+            try {
+                ipStr = Files.lines(Paths.get(pathFile)).skip(lineNumber - 1).findFirst().get();
+                String portStr = Files.lines(Paths.get(pathFile)).skip(lineNumber).findFirst().get();
+                
+                portServer = Integer.parseInt(portStr);
+                                
+            } catch (IOException e) {
+                System.out.println("Lỗi: " + e.getMessage());
+            }
+        }  
+        
+        String username = txtUsername.getText();
+        String password = txtPassword.getText();
+        try {
+            UserBean user = userBO.login(username, password);
+            if (user !=null) {
+                new ClientView(ipStr, portServer, user).setVisible(true);
+            }else {
+                JOptionPane.showMessageDialog(this, "Sai tài khoản hoặc mật khẩu", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                txtUsername.setText("");
+                txtPassword.setText("");
+                txtUsername.requestFocus();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                
+    }//GEN-LAST:event_btnLoginActionPerformed
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        // TODO add your handling code here:
+        
+        Path path = Paths.get(pathFolder);
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+            }
+        }
+
+        try {
+            String port = "9000";
+            String ipServer = "localhost";
+            StringBuilder contentStr = new StringBuilder(ipServer + "\n");
+                contentStr.append(port);
+                Files.write(Paths.get(pathFile), contentStr.toString().getBytes());
+        } catch (IOException ex) {
+            Logger.getLogger(SettingView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_formWindowOpened
 
     /**
      * @param args the command line arguments

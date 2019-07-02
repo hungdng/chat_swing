@@ -11,8 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -118,11 +116,27 @@ public class UserDAO implements IUserDAO {
 
     @Override
     public Optional<UserBean> getByUsername(String username) throws Exception {
-
         try {
             String sql = "SELECT * FROM [User] WHERE username = ?";
             PreparedStatement statement = ConnectDB.conn.prepareStatement(sql);
             statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return Optional.of(createUser(resultSet));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<UserBean> login(String username, String password) throws Exception {
+        try {
+            String sql = "SELECT * FROM [User] WHERE username = ? and password = ?";
+            PreparedStatement statement = ConnectDB.conn.prepareStatement(sql);
+            statement.setString(1, username);
+            statement.setString(2, password);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return Optional.of(createUser(resultSet));

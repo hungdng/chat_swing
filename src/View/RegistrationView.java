@@ -23,13 +23,14 @@ public class RegistrationView extends javax.swing.JFrame {
     private final String pathFile = "C:\\chat\\portapp.txt";
     String ipStr = "";
     String portStr = "";
-    UserBO userBO = new UserBO();
+    UserBO userBO;
 
     /**
      * Creates new form RegistrationView
      */
     public RegistrationView() {
         initComponents();
+        userBO = new UserBO();
     }
     
     private void getInfoServer() {
