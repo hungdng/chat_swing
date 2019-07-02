@@ -9,7 +9,6 @@ import BO.ClientBO;
 import Utils.ChatMessage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import org.jcp.xml.dsig.internal.dom.Utils;
 
 /**
  *
@@ -239,7 +238,6 @@ public class ClientView extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        // TODO add your handling code here:
         // ok it is a connection request
         String username = txtUsername.getText().trim();
         // empty username ignore it
@@ -282,6 +280,9 @@ public class ClientView extends javax.swing.JFrame {
         // disable the Server and Port JTextField
         txtIPServer.setEditable(false);
         txtPortServer.setEditable(false);
+        
+        ChatMessage message = new ChatMessage(ChatMessage.WHOISIN, username);
+        clientBO.sendMessage(message);
 
         // Action listener for when the user enter a message
         //tf.addActionListener(this);
@@ -297,13 +298,11 @@ public class ClientView extends javax.swing.JFrame {
         txtPortServer.setEnabled(connected);
         
         txtUsername.setText("(IP) "+getIP());
-        return;
     }//GEN-LAST:event_btnLogOutActionPerformed
 
     private void btnWhoIsOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWhoIsOnlineActionPerformed
         // TODO add your handling code here:
         clientBO.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
-        return;
     }//GEN-LAST:event_btnWhoIsOnlineActionPerformed
 
     private void txtUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsernameActionPerformed

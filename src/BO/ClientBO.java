@@ -173,15 +173,8 @@ public class ClientBO {
             while (true) {
                 try {
                     String msg = (String) sInput.readObject();
-                    // if console mode print the message and add back the prompt
-                    if (clientView == null) {
-                        System.out.println(msg);
-                        System.out.print("> ");
-                    } else {
-                        clientView.append(msg);
-                    }
+                    clientView.append(msg);
                 } catch (IOException e) {
-                    e.printStackTrace();
 //                    display("Server has close the connection: " + e);
                     if (clientView != null) {
                         clientView.connectionFailed();

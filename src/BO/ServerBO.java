@@ -42,7 +42,7 @@ public class ServerBO {
         // ArrayList for the Client list
         listClient = new ArrayList<ClientThread>();
     }
-    
+
     public void start() {
         keepGoing = true;
         /* create socket server and wait for connection requests */
@@ -102,7 +102,7 @@ public class ServerBO {
     }
 
     /*
-	 * Display an event (not a message) to the console or the GUI
+     * Display an event (not a message) to the console or the GUI
      */
     private void display(String msg) {
         String time = sdf.format(new Date()) + " " + msg;
@@ -114,28 +114,47 @@ public class ServerBO {
     }
 
     /*
-	 *  to broadcast a message to all Clients
+     *  to broadcast a message to all Clients
      */
-    private synchronized void broadcast(String message) {
-        // add HH:mm:ss and \n to the message
-        String time = sdf.format(new Date());
-        String messageLf = time + " " + message + "\n";
-        // display message on console or GUI
-        if (serverView == null) {
-            System.out.print(messageLf);
+    private synchronized void broadcast(int type, String message) {
+        if (type == ChatMessage.WHOISIN || type == ChatMessage.LOGOUT) {
+            String[] listStr = message.split("[:]");
+            // display message on console or GUI
+//            serverView.appendRoom(message);
+            // we loop in reverse order in case we would have to remove a Client
+            // because it has disconnected
+            for (int i = listClient.size(); --i >= 0;) {
+                ClientThread ct = listClient.get(i);
+                // try to write to the Client if it fails remove it from the list
+                if (!ct.username.equals(listStr[0])) {
+                    if (!ct.writeMsg(message)) {
+                        listClient.remove(i);
+                        display("Disconnected Client " + ct.username + " removed from list.");
+                    }
+                }
+            }
         } else {
-            serverView.appendRoom(messageLf);     // append in the room window
-        }
+            // add HH:mm:ss and \n to the message
+            String time = sdf.format(new Date());
+            String messageLf = time + " " + message + "\n";
+            // display message on console or GUI
+            if (serverView == null) {
+                System.out.print(messageLf);
+            } else {
+                serverView.appendRoom(messageLf);     // append in the room window
+            }
         // we loop in reverse order in case we would have to remove a Client
-        // because it has disconnected
-        for (int i = listClient.size(); --i >= 0;) {
-            ClientThread ct = listClient.get(i);
-            // try to write to the Client if it fails remove it from the list
-            if (!ct.writeMsg(messageLf)) {
-                listClient.remove(i);
-                display("Disconnected Client " + ct.username + " removed from list.");
+            // because it has disconnected
+            for (int i = listClient.size(); --i >= 0;) {
+                ClientThread ct = listClient.get(i);
+                // try to write to the Client if it fails remove it from the list
+                if (!ct.writeMsg(messageLf)) {
+                    listClient.remove(i);
+                    display("Disconnected Client " + ct.username + " removed from list.");
+                }
             }
         }
+
     }
 
     // for a client who logoff using the LOGOUT message
@@ -150,8 +169,7 @@ public class ServerBO {
             }
         }
     }
-    
-    
+
     /**
      * One instance of this thread will run for each client
      */
@@ -216,19 +234,23 @@ public class ServerBO {
                 switch (cm.getType()) {
 
                     case ChatMessage.MESSAGE:
-                        broadcast(username + ": " + message);
+                        broadcast(ChatMessage.MESSAGE, username + ": " + message);
                         break;
                     case ChatMessage.LOGOUT:
                         display(username + " disconnected with a LOGOUT message.");
+                        broadcast(ChatMessage.LOGOUT,username + ": disconnected with a LOGOUT message.");
                         keepGoing = false;
                         break;
                     case ChatMessage.WHOISIN:
-                        writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
-                        // scan al the users connected
-                        for (int i = 0; i < listClient.size(); ++i) {
-                            ClientThread ct = listClient.get(i);
-                            writeMsg((i + 1) + ") " + ct.username + " since " + ct.date);
-                        }
+                        System.out.println("-=--" + id + " - " + username);
+                        message = username + ": đã đăng nhập";
+                        broadcast(ChatMessage.WHOISIN,message);
+//                        writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
+//                        // scan al the users connected
+//                        for (int i = 0; i < listClient.size(); ++i) {
+//                            ClientThread ct = listClient.get(i);
+//                            writeMsg((i + 1) + ") " + ct.username + " since " + ct.date);
+//                        }
                         break;
                 }
             }
@@ -262,7 +284,7 @@ public class ServerBO {
         }
 
         /*
-		 * Write a String to the Client output stream
+         * Write a String to the Client output stream
          */
         private boolean writeMsg(String msg) {
             // if Client is still connected send the message to it
@@ -281,6 +303,5 @@ public class ServerBO {
             return true;
         }
     }
-    
-    
+
 }
