@@ -115,11 +115,14 @@ public class SettingView extends javax.swing.JFrame {
 
         try {
             String content = txtPort.getText();
+            StringBuilder contentStr = new StringBuilder(txtServer.getText().trim()+ "\n");
+            contentStr.append(txtPort.getText().trim());
             try {
                 Integer.parseInt(content);
-                Files.write(Paths.get(pathFile), content.getBytes());
+                Files.write(Paths.get(pathFile), contentStr.toString().getBytes());
+                JOptionPane.showMessageDialog(this, "Cấu hình thành công.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Port is valid", "Message", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Định dạng cổng không chính xác.", "Thông báo", JOptionPane.ERROR_MESSAGE);
                 txtPort.setText("");
                 txtPort.requestFocus();
             }
@@ -133,13 +136,16 @@ public class SettingView extends javax.swing.JFrame {
         if (fileExists) {
             int lineNumber = 1;
             try {
-                String str = Files.lines(Paths.get(pathFile)).skip(lineNumber - 1).findFirst().get();
-                txtPort.setText(str);                
+                String ipStr = Files.lines(Paths.get(pathFile)).skip(lineNumber - 1).findFirst().get();
+                String portStr = Files.lines(Paths.get(pathFile)).skip(lineNumber).findFirst().get();
+                txtPort.setText(portStr);   
+                txtServer.setText(ipStr);
 
             } catch (IOException e) {
+                System.out.println("Lỗi: " + e.getMessage());
             }
         } 
-        txtPort.requestFocus();
+        txtServer.requestFocus();
     }//GEN-LAST:event_formWindowOpened
 
     /**

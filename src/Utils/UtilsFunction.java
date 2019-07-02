@@ -13,5 +13,14 @@ import java.net.UnknownHostException;
  * @author hung.tran
  */
 public class UtilsFunction {
-    
+    public static String getIP() {
+        try {
+            InetAddress ipAddr = InetAddress.getLocalHost();
+            return ipAddr.getHostAddress() + "";
+
+        } catch (UnknownHostException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 }

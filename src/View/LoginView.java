@@ -65,6 +65,11 @@ public class LoginView extends javax.swing.JFrame {
         );
 
         btnRegistration.setText("Registration");
+        btnRegistration.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRegistrationActionPerformed(evt);
+            }
+        });
 
         btnSetting.setText("Settings");
 
@@ -131,6 +136,11 @@ public class LoginView extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnRegistrationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrationActionPerformed
+        // TODO add your handling code here:
+        new RegistrationView().setVisible(true);
+    }//GEN-LAST:event_btnRegistrationActionPerformed
 
     /**
      * @param args the command line arguments

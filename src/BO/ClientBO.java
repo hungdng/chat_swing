@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
  * @author hung.tran
  */
 public class ClientBO {
+
     // for I/O
     private ObjectInputStream sInput;		// to read from the socket
     private ObjectOutputStream sOutput;		// to write on the socket
@@ -38,11 +39,11 @@ public class ClientBO {
         this.username = username;
         this.port = port;
     }
-    
+
     public ClientBO(String server, String username, int port) {
-        this(null, server, username, port);        
+        this(null, server, username, port);
     }
-    
+
     /*
 	 * To start the dialog
      */
@@ -92,6 +93,10 @@ public class ClientBO {
         } else {
             clientView.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
         }
+    }
+
+    private void display(ChatMessage msg) {
+        clientView.append(msg.getMessage() + "\n");
     }
 
     /*
@@ -155,37 +160,44 @@ public class ClientBO {
 	 * In console mode, if an error occurs the program simply stops
 	 * when a GUI id used, the GUI is informed of the disconnection
      */
-    
-    public String getIP(){
+    public String getIP() {
         try {
             ipAddr = InetAddress.getLocalHost();
             System.out.println(ipAddr.getHostAddress());
-            
+
         } catch (UnknownHostException ex) {
             ex.printStackTrace();
         }
-        return ipAddr.getHostAddress()+"";
+        return ipAddr.getHostAddress() + "";
     }
-    
+
     class ListenFromServer extends Thread {
 
+        @Override
         public void run() {
             while (true) {
                 try {
-                    String msg = (String) sInput.readObject();
-                    clientView.append(msg);
+                    ChatMessage msg = (ChatMessage) sInput.readObject();
+                    
+                    if (msg.getType() == ChatMessage.LOGOUT || msg.getType() == ChatMessage.ONLINE) {
+                        if (!username.equalsIgnoreCase(msg.getUsername())) {
+                            clientView.append(msg.getMessage());
+                        }                        
+                        clientView.loadData(msg.getListUser());
+                    }else{
+                        clientView.append(msg.getMessage());
+                    }                    
                 } catch (IOException e) {
-//                    display("Server has close the connection: " + e);
+                    display("Server has close the connection.");
                     if (clientView != null) {
                         clientView.connectionFailed();
                     }
                     break;
-                } // can't happen with a String object but need the catch anyhow
+                }
                 catch (ClassNotFoundException e2) {
                 }
             }
         }
     }
-    
-    
+
 }

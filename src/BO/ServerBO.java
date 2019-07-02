@@ -40,7 +40,7 @@ public class ServerBO {
         this.port = port;
         sdf = new SimpleDateFormat("HH:mm:ss");
         // ArrayList for the Client list
-        listClient = new ArrayList<ClientThread>();
+        listClient = new ArrayList<>();
     }
 
     public void start() {
@@ -61,7 +61,7 @@ public class ServerBO {
                     break;
                 }
                 ClientThread t = new ClientThread(socket);  // make a thread of it
-                listClient.add(t);									// save it in the ArrayList
+                listClient.add(t);			// save it in the ArrayList
                 t.start();
             }
             // I was asked to stop
@@ -101,63 +101,35 @@ public class ServerBO {
         }
     }
 
-    /*
-     * Display an event (not a message) to the console or the GUI
-     */
     private void display(String msg) {
         String time = sdf.format(new Date()) + " " + msg;
-        if (serverView == null) {
-            System.out.println(time);
-        } else {
-            serverView.appendEvent(time + "\n");
-        }
+        serverView.appendEvent(time + "\n");
     }
 
     /*
      *  to broadcast a message to all Clients
      */
-    private synchronized void broadcast(int type, String message) {
-        if (type == ChatMessage.WHOISIN || type == ChatMessage.LOGOUT) {
-            String[] listStr = message.split("[:]");
-            // display message on console or GUI
-//            serverView.appendRoom(message);
+    private synchronized void broadcast(ChatMessage message) {
+        String messageLf = message.getMessage();
+        if (message.getType() != ChatMessage.ONLINE || message.getType() != ChatMessage.LOGOUT) {
+            String time = sdf.format(new Date());
+            messageLf = time + " " + message.getMessage() + "\n";
+            message.setMessage(messageLf);
+        }                     
+            serverView.appendRoom(messageLf);
             // we loop in reverse order in case we would have to remove a Client
             // because it has disconnected
             for (int i = listClient.size(); --i >= 0;) {
                 ClientThread ct = listClient.get(i);
                 // try to write to the Client if it fails remove it from the list
-                if (!ct.username.equals(listStr[0])) {
-                    if (!ct.writeMsg(message)) {
-                        listClient.remove(i);
-                        display("Disconnected Client " + ct.username + " removed from list.");
-                    }
-                }
-            }
-        } else {
-            // add HH:mm:ss and \n to the message
-            String time = sdf.format(new Date());
-            String messageLf = time + " " + message + "\n";
-            // display message on console or GUI
-            if (serverView == null) {
-                System.out.print(messageLf);
-            } else {
-                serverView.appendRoom(messageLf);     // append in the room window
-            }
-        // we loop in reverse order in case we would have to remove a Client
-            // because it has disconnected
-            for (int i = listClient.size(); --i >= 0;) {
-                ClientThread ct = listClient.get(i);
-                // try to write to the Client if it fails remove it from the list
-                if (!ct.writeMsg(messageLf)) {
+                if (!ct.writeMsg(message)) {
                     listClient.remove(i);
-                    display("Disconnected Client " + ct.username + " removed from list.");
+                    display("Disconnected Client " + ct.username + " removed from list.\n");
                 }
             }
-        }
 
     }
 
-    // for a client who logoff using the LOGOUT message
     synchronized void remove(int id) {
         // scan the array list until we found the Id
         for (int i = 0; i < listClient.size(); ++i) {
@@ -179,35 +151,28 @@ public class ServerBO {
         Socket socket;
         ObjectInputStream sInput;
         ObjectOutputStream sOutput;
-        // my unique id (easier for deconnection)
         int id;
-        // the Username of the Client
         String username;
-        // the only type of message a will receive
         ChatMessage cm;
-        // the date I connect
         String date;
+        ArrayList<String> listUser = new ArrayList<>();
 
-        // Constructore
         ClientThread(Socket socket) {
-            // a unique id
             id = ++uniqueId;
             this.socket = socket;
             /* Creating both Data Stream */
             System.out.println("Thread trying to create Object Input/Output Streams");
             try {
-                // create output first
                 sOutput = new ObjectOutputStream(socket.getOutputStream());
                 sInput = new ObjectInputStream(socket.getInputStream());
-                // read the username
                 username = (String) sInput.readObject();
-                display(username + " just connected.");
+                display(username + " đã đăng nhập.");
             } catch (IOException e) {
                 display("Exception creating new Input/output Streams: " + e);
                 return;
-            } // have to catch ClassNotFoundException
-            // but I read a String, I am sure it will work
+            } 
             catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
             date = new Date().toString() + "\n";
         }
@@ -234,59 +199,54 @@ public class ServerBO {
                 switch (cm.getType()) {
 
                     case ChatMessage.MESSAGE:
-                        broadcast(ChatMessage.MESSAGE, username + ": " + message);
+                        broadcast(new ChatMessage(ChatMessage.MESSAGE, username + ": " + message));
                         break;
                     case ChatMessage.LOGOUT:
-                        display(username + " disconnected with a LOGOUT message.");
-                        broadcast(ChatMessage.LOGOUT,username + ": disconnected with a LOGOUT message.");
+                        display(username + " đã đăng xuất.");
+                        String messageSend = ">>>> Hệ thống: " + username + " đã đăng xuất.";
+                        listUser.clear();
+                        for(ClientThread item : listClient){
+                            listUser.add(item.username);                            
+                        }
+                        broadcast(new ChatMessage(ChatMessage.LOGOUT,messageSend , username, listUser));
                         keepGoing = false;
                         break;
-                    case ChatMessage.WHOISIN:
-                        System.out.println("-=--" + id + " - " + username);
-                        message = username + ": đã đăng nhập";
-                        broadcast(ChatMessage.WHOISIN,message);
-//                        writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
-//                        // scan al the users connected
-//                        for (int i = 0; i < listClient.size(); ++i) {
-//                            ClientThread ct = listClient.get(i);
-//                            writeMsg((i + 1) + ") " + ct.username + " since " + ct.date);
-//                        }
-                        break;
+                    case ChatMessage.ONLINE:
+                        message = ">>>> Hệ thống: " + username + " đã đăng nhập.";
+                        listUser.clear();
+                        for(ClientThread item : listClient){
+                            listUser.add(item.username);                          
+                        }
+                        broadcast(new ChatMessage(ChatMessage.ONLINE, message, username, listUser));
+                        break;                    
                 }
             }
-            // remove myself from the arrayList containing the list of the
-            // connected Clients
+            // remove myself from the arrayList containing the list of the connected Clients
             remove(id);
             close();
         }
 
         // try to close everything
         private void close() {
-            // try to close the connection
             try {
                 if (sOutput != null) {
                     sOutput.close();
                 }
-            } catch (IOException e) {
-            }
-            try {
                 if (sInput != null) {
                     sInput.close();
                 }
-            } catch (IOException e) {
-            }
-            try {
                 if (socket != null) {
                     socket.close();
                 }
             } catch (IOException e) {
-            }
+                e.printStackTrace();
+            }            
         }
 
         /*
          * Write a String to the Client output stream
          */
-        private boolean writeMsg(String msg) {
+        private boolean writeMsg(ChatMessage msg) {
             // if Client is still connected send the message to it
             if (!socket.isConnected()) {
                 close();

@@ -22,11 +22,22 @@ public class ConnectDB {
     public static final String CONNECT_SUCCESS = "Conect success";
 
     public static void Connect(String serverName, String databaseName, String userName, String password) throws SQLException, ClassNotFoundException {
-        Connection conn = null;
         Class.forName(DRIVER_CONNECT);
         String url = String.format("jdbc:sqlserver://%s:1433;databaseName=%s;user=%s; password=%s", serverName, databaseName, userName, password);
         conn = DriverManager.getConnection(url);
         System.out.println(CONNECT_SUCCESS);
+    }
+    
+    public static ResultSet getTable(String query, String tableName) throws Exception {
+        String sql = "select " + query + " from " + tableName;
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        return stmt.executeQuery();
+    }
+
+    public static ResultSet getTable(String query, String tableName, String condition) throws Exception {
+        String sql = "select " + query + " from " + tableName + " where " + condition;
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        return stmt.executeQuery();
     }
 
     public static void closeConnection() throws SQLException {

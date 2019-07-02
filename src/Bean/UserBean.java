@@ -41,6 +41,24 @@ public class UserBean {
         this.isConnected = isConnected;
         this.lastLogin = new Date();
     }
+    
+    public UserBean(int id, String username, String ip, String fullName, boolean isConnected) {
+        this.id = id;
+        this.username = username;
+        this.ip = ip;
+        this.fullName = fullName;
+        this.isConnected = isConnected;
+        this.lastLogin = new Date();
+    }
+    
+    public UserBean(String username, String password, String ip, String fullName) {
+        this.username = username;
+        this.password = password;
+        this.ip = ip;
+        this.fullName = fullName;
+        this.lastLogin = new Date();
+        this.isConnected = false;
+    }
 
     public int getId() {
         return id;

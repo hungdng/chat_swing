@@ -9,6 +9,8 @@ import BO.ClientBO;
 import Utils.ChatMessage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import javax.swing.DefaultListModel;
 
 /**
  *
@@ -17,21 +19,22 @@ import java.net.UnknownHostException;
 public class ClientView extends javax.swing.JFrame {
 
     private boolean connected;
-    // the Client object
     private ClientBO clientBO;
-    // the default port number
     private final int defaultPort;
     private final String defaultHost;
     InetAddress ipAddr;
+    private String username = "";
+//    private ArrayList<String> listUserStr;
 
     /**
      * Creates new form ChatView
+     *
      * @param host
      * @param port
      */
     public ClientView(String host, int port) {
         initComponents();
-        
+//        listUserStr = new ArrayList<>();
         defaultPort = port;
         defaultHost = host;
         txtIPServer.setEditable(true);
@@ -40,19 +43,30 @@ public class ClientView extends javax.swing.JFrame {
         txtPortServer.setEnabled(true);
         txtPortServer.requestFocus();
         btnLogOut.setEnabled(false);
-        
+
         txtUsername.setText(getIP());
     }
     
-    public String getIP(){
+    public void loadData(ArrayList<String> listUserStr) {        
+        DefaultListModel model = new DefaultListModel();
+        listUserStr.forEach((usernameStr) -> {
+            if (!usernameStr.equalsIgnoreCase(username)) {
+                model.addElement(usernameStr);
+            }
+            
+        });
+        listUser.setModel(model);
+    }
+
+    public String getIP() {
         try {
             ipAddr = InetAddress.getLocalHost();
             System.out.println(ipAddr.getHostAddress());
-            
+
         } catch (UnknownHostException ex) {
             ex.printStackTrace();
         }
-        return ipAddr.getHostAddress()+"";
+        return ipAddr.getHostAddress() + "";
     }
 
     // called by the Client to append text in the TextArea 
@@ -60,9 +74,10 @@ public class ClientView extends javax.swing.JFrame {
         txtLog.append(str);
         txtLog.setCaretPosition(txtLog.getText().length() - 1);
     }
+
+
     // called by the GUI is the connection failed
     // we reset our buttons, label, textfield
-
     public void connectionFailed() {
         btnLogin.setEnabled(true);
         btnLogOut.setEnabled(false);
@@ -76,9 +91,6 @@ public class ClientView extends javax.swing.JFrame {
         txtIPServer.setEditable(true);
         txtPortServer.setEditable(true);
         txtPortServer.requestFocus();
-
-        // don't react to a <CR> after the username
-        //tf.removeActionListener();
         connected = false;
 
     }
@@ -239,7 +251,7 @@ public class ClientView extends javax.swing.JFrame {
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
         // ok it is a connection request
-        String username = txtUsername.getText().trim();
+        username = txtUsername.getText().trim();
         // empty username ignore it
         if (username.length() == 0) {
             return;
@@ -280,8 +292,8 @@ public class ClientView extends javax.swing.JFrame {
         // disable the Server and Port JTextField
         txtIPServer.setEditable(false);
         txtPortServer.setEditable(false);
-        
-        ChatMessage message = new ChatMessage(ChatMessage.WHOISIN, username);
+
+        ChatMessage message = new ChatMessage(ChatMessage.ONLINE, username);
         clientBO.sendMessage(message);
 
         // Action listener for when the user enter a message
@@ -296,13 +308,13 @@ public class ClientView extends javax.swing.JFrame {
         txtPortServer.setEditable(true);
         txtIPServer.setEnabled(connected);
         txtPortServer.setEnabled(connected);
-        
-        txtUsername.setText("(IP) "+getIP());
+
+        txtUsername.setText("(IP) " + getIP());
     }//GEN-LAST:event_btnLogOutActionPerformed
 
     private void btnWhoIsOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnWhoIsOnlineActionPerformed
         // TODO add your handling code here:
-        clientBO.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
+        clientBO.sendMessage(new ChatMessage(ChatMessage.ONLINE, ""));
     }//GEN-LAST:event_btnWhoIsOnlineActionPerformed
 
     private void txtUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtUsernameActionPerformed
