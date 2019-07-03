@@ -3,8 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/DUY_TAN/chat_swing/src/BO/ClientBO.java</file>
-            <file>file:/D:/DUY_TAN/chat_swing/src/View/ClientView.java</file>
+            <file>file:/C:/Users/tahung/Documents/NetBeansProjects/Chat_UI/src/View/ClientView.java</file>
+            <file>file:/C:/Users/tahung/Documents/NetBeansProjects/Chat_UI/src/BO/ClientBO.java</file>
+            <file>file:/C:/Users/tahung/Documents/NetBeansProjects/Chat_UI/src/BO/ServerBO.java</file>
+            <file>file:/C:/Users/tahung/Documents/NetBeansProjects/Chat_UI/src/View/ServerView.java</file>
+            <file>file:/C:/Users/tahung/Documents/NetBeansProjects/Chat_UI/src/Utils/ChatService.java</file>
         </group>
     </open-files>
 </project-private>
