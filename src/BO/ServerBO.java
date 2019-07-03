@@ -6,6 +6,7 @@
 package BO;
 
 import Utils.ChatMessage;
+import Utils.ChatService;
 import View.ServerView;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,6 +16,8 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -24,44 +27,40 @@ public class ServerBO {
     // a unique ID for each connection
 
     private static int uniqueId;
-    // an ArrayList to keep the list of the Client
     private ArrayList<ClientThread> listClient;
-    // if I am in a GUI
     private ServerView serverView;
-    // to display time
     private SimpleDateFormat sdf;
-    // the port number to listen for connection
     private int port;
     // the boolean that will be turned of to stop the server
     private boolean keepGoing;
+    
+    private ChatService chatService;
 
     public ServerBO(ServerView serverView, int port) {
         this.serverView = serverView;
         this.port = port;
         sdf = new SimpleDateFormat("HH:mm:ss");
-        // ArrayList for the Client list
         listClient = new ArrayList<>();
+        chatService = new ChatService();
     }
 
     public void start() {
         keepGoing = true;
         /* create socket server and wait for connection requests */
         try {
-            // the socket used by the server
-            ServerSocket serverSocket = new ServerSocket(port);
+            ServerSocket serverSocket = new ServerSocket(port);           
 
             // infinite loop to wait for connections
             while (keepGoing) {
-                // format message saying we are waiting
-                display("Server waiting for Clients on port " + port + ".");
+                display("Server đang hoạt động ở cổng " + port + ".");
 
-                Socket socket = serverSocket.accept();  	// accept connection
+                Socket socket = serverSocket.accept();
                 // if I was asked to stop
                 if (!keepGoing) {
                     break;
                 }
-                ClientThread t = new ClientThread(socket);  // make a thread of it
-                listClient.add(t);			// save it in the ArrayList
+                ClientThread t = new ClientThread(socket);
+                listClient.add(t);
                 t.start();
             }
             // I was asked to stop
@@ -74,26 +73,20 @@ public class ServerBO {
                         tc.sOutput.close();
                         tc.socket.close();
                     } catch (IOException ioE) {
-                        // not much I can do
                     }
                 }
             } catch (Exception e) {
                 display("Exception closing the server and clients: " + e);
             }
-        } // something went bad
+        }
         catch (IOException e) {
             String msg = sdf.format(new Date()) + " Exception on new ServerSocket: " + e + "\n";
             display(msg);
         }
     }
 
-    /*
-     * For the GUI to stop the server
-     */
     public void stop() {
         keepGoing = false;
-        // connect to myself as Client to exit statement 
-        // Socket socket = serverSocket.accept();
         try {
             Socket socket = new Socket("localhost", port);
         } catch (Exception e) {
@@ -116,8 +109,8 @@ public class ServerBO {
             messageLf = time + " " + message.getMessage() + "\n";
             message.setMessage(messageLf);
         }
-        serverView.appendRoom(messageLf);
-            // we loop in reverse order in case we would have to remove a Client
+
+        // we loop in reverse order in case we would have to remove a Client
         // because it has disconnected
         for (int i = listClient.size(); --i >= 0;) {
             ClientThread ct = listClient.get(i);
@@ -127,10 +120,9 @@ public class ServerBO {
                 display("Disconnected Client " + ct.username + " removed from list.\n");
             }
         }
-
     }
 
-    synchronized void remove(int id) {
+    private synchronized void remove(int id) {
         // scan the array list until we found the Id
         for (int i = 0; i < listClient.size(); ++i) {
             ClientThread ct = listClient.get(i);
@@ -161,7 +153,6 @@ public class ServerBO {
             id = ++uniqueId;
             this.socket = socket;
             /* Creating both Data Stream */
-            System.out.println("Thread trying to create Object Input/Output Streams");
             try {
                 sOutput = new ObjectOutputStream(socket.getOutputStream());
                 sInput = new ObjectInputStream(socket.getInputStream());
@@ -191,39 +182,37 @@ public class ServerBO {
                 } catch (ClassNotFoundException e2) {
                     break;
                 }
-                // the messaage part of the ChatMessage
                 String message = cm.getMessage();
-
-                // Switch on the type of message receive
                 switch (cm.getType()) {
 
                     case ChatMessage.MESSAGE:
                         broadcast(new ChatMessage(ChatMessage.MESSAGE, username + ": " + message));
                         break;
                     case ChatMessage.LOGOUT:
-                        display(username + " đã đăng xuất.");
-                        String messageSend = ">> [Hệ thống]: " + username + " đã đăng xuất.";
                         remove(id);
-                        listUser.clear();
-                        listClient.stream().forEach((item) -> {
-                            listUser.add(item.username);
-                        });
-                        broadcast(new ChatMessage(ChatMessage.LOGOUT, messageSend, username, listUser));
-                        keepGoing = false;
-
+                        synchronized (this) {
+                            display(username + " đã đăng xuất.");
+                            String messageSend = ">> [Hệ thống]: " + username + " đã đăng xuất.";                            
+                            listUser.clear();
+                            for (ClientThread clientThread : listClient) {
+                                listUser.add(clientThread.username);
+                            }
+                            broadcast(new ChatMessage(ChatMessage.LOGOUT, messageSend, username, listUser));
+                            keepGoing = false;
+                        }                       
                         break;
                     case ChatMessage.ONLINE:
                         message = ">> [Hệ thống]: " + username + " đã đăng nhập.";
                         listUser.clear();
-                        for (ClientThread item : listClient) {
+                        listClient.forEach((item) -> {
                             listUser.add(item.username);
-                        }
+                        });
                         broadcast(new ChatMessage(ChatMessage.ONLINE, message, username, listUser));
                         break;
                 }
             }
             // remove myself from the arrayList containing the list of the connected Clients
-            //remove(id);
+            remove(id);
             close();
         }
 
@@ -256,8 +245,7 @@ public class ServerBO {
             // write the message to the stream
             try {
                 sOutput.writeObject(msg);
-            } // if an error occurs, do not abort just inform the user
-            catch (IOException e) {
+            } catch (IOException e) {
                 display("Error sending message to " + username);
                 display(e.toString());
             }

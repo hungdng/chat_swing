@@ -23,11 +23,8 @@ public class ClientBO {
     private ObjectInputStream sInput;
     private ObjectOutputStream sOutput;	
     private Socket socket;
-
-    // if I use a GUI or not
     private ClientView clientView;
 
-    // the server, the port and the username
     private String server, username;
     private int port;
 
@@ -46,16 +43,15 @@ public class ClientBO {
      * To start the dialog
      */
     public boolean start() {
-        // try to connect to the server
         try {
             socket = new Socket(server, port);
-        } // if it failed not much I can so
+        }
         catch (Exception ec) {
             display("Error connectiong to server:" + ec);
             return false;
         }
 
-        String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
+        String msg = "Kết nối thành công đến Server " + socket.getInetAddress() + ":" + socket.getPort();
         display(msg);
 
         /* Creating both Data Stream */
@@ -67,7 +63,6 @@ public class ClientBO {
             return false;
         }
 
-        // creates the Thread to listen from the server 
         new ListenFromServer().start();
         // Send our username to the server this is the only message that we
         // will send as a String. All other messages will be ChatMessage objects
@@ -78,7 +73,6 @@ public class ClientBO {
             disconnect();
             return false;
         }
-        // success we inform the caller that it worked
         return true;
     }
 
@@ -97,7 +91,6 @@ public class ClientBO {
         try {
             sOutput.writeObject(msg);
         } catch (IOException e) {
-//            e.printStackTrsace();
             display("Exception writing to server: " + e);
         }
     }
@@ -106,7 +99,7 @@ public class ClientBO {
      * When something goes wrong
      * Close the Input/Output streams and disconnect not much to do in the catch clause
      */
-    private void disconnect() {
+    public void disconnect() {
         try {
             if (sInput != null) {
                 sInput.close();

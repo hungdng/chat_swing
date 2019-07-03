@@ -8,8 +8,6 @@ package View;
 import BO.ClientBO;
 import Bean.UserBean;
 import Utils.ChatMessage;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import javax.swing.DefaultListModel;
 
@@ -153,6 +151,7 @@ public class ClientView extends javax.swing.JFrame {
 
     private void btnLogOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogOutActionPerformed
         clientBO.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+        clientBO.disconnect();
         this.dispose();
     }//GEN-LAST:event_btnLogOutActionPerformed
 
@@ -160,6 +159,8 @@ public class ClientView extends javax.swing.JFrame {
         if (connected) {
             ChatMessage message = new ChatMessage(ChatMessage.MESSAGE, txtContent.getText());
             clientBO.sendMessage(message);
+            txtContent.setText("");
+            txtContent.requestFocus();
         }
     }//GEN-LAST:event_btnSendActionPerformed
 

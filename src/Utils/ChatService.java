@@ -22,9 +22,8 @@ public class ChatService {
     public ChatService() {
     }
 
-    public void openport(int port) throws Exception {
+    public void openPort(int port) throws Exception {
         socket = new ServerSocket(port);
-        System.out.println("Da mo cong " + port);
     }
 
     public void send(String ip, String data, int port) throws Exception {

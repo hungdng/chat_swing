@@ -6,8 +6,6 @@
 package View;
 
 import BO.ServerBO;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -15,25 +13,16 @@ import java.util.Date;
  *
  * @author hung.tran
  */
-public class ServerView extends javax.swing.JFrame {       
-    private InetAddress ipAddr;
-    private ServerBO server;
+public class ServerView extends javax.swing.JFrame {
+
+    private ServerBO serverBO = null;
+    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 
     /**
      * Creates new form ServerView
-     */        
-    
+     */
     public ServerView() {
-        initComponents();  
-        server = null;
-//        mulaiJam();
-    }
-    
-    // append message to the two JTextArea
-    // position at the end
-    public void appendRoom(String str) {
-        txtChat.append(str);
-        txtChat.setCaretPosition(txtChat.getText().length() - 1);
+        initComponents();
     }
 
     public void appendEvent(String str) {
@@ -41,40 +30,28 @@ public class ServerView extends javax.swing.JFrame {
         txtLog.setCaretPosition(txtLog.getText().length() - 1);
 
     }
-    
-    public String getIP(){
-        try {
-            ipAddr = InetAddress.getLocalHost();
-            System.out.println(ipAddr.getHostAddress());
-            
-        } catch (UnknownHostException ex) {
-            ex.printStackTrace();
-        }
-        return ipAddr.getHostAddress()+"";
-    }
-    
-    public void startingServer(){
-        // if running we have to stop
-        if (server != null) {
-            server.stop();
-            server = null;
+
+    public void startingServer() {
+        // if server is running, we have to stop
+        if (serverBO != null) {
+            serverBO.stop();
+            serverBO = null;
             txtPortNumber.setEditable(true);
-            btnStartStop.setText("START");
+            btnStartStop.setText("Bắt đầu");
             return;
         }
-        // OK start the server	
+        //Start server	
         int port;
         try {
             port = Integer.parseInt(txtPortNumber.getText().trim());
-        } catch (Exception er) {
-            appendEvent("Invalid port number");
+        } catch (NumberFormatException er) {
+            appendEvent("Cổng không hợp lệ.");
             return;
         }
-        // ceate a new ServerJFrame
-        server = new ServerBO(this, port);
+        serverBO = new ServerBO(this, port);
         // and start it as a thread
         new ServerRunning().start();
-        btnStartStop.setText("STOP");
+        btnStartStop.setText("Kết thúc");
         txtPortNumber.setEditable(false);
     }
 
@@ -93,10 +70,6 @@ public class ServerView extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtLog = new javax.swing.JTextArea();
-        jPanel3 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        txtChat = new javax.swing.JTextArea();
-        lblTime = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -105,9 +78,11 @@ public class ServerView extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setText("Port Number");
+        jLabel1.setText("Cổng");
 
-        btnStartStop.setText("Start");
+        txtPortNumber.setText("9000");
+
+        btnStartStop.setText("Bắt đầu");
         btnStartStop.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnStartStopActionPerformed(evt);
@@ -137,31 +112,6 @@ public class ServerView extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Chat"));
-
-        txtChat.setColumns(20);
-        txtChat.setRows(5);
-        jScrollPane3.setViewportView(txtChat);
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane3)
-                .addContainerGap())
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
-        lblTime.setText("jLabel2");
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -173,17 +123,11 @@ public class ServerView extends javax.swing.JFrame {
                 .addComponent(txtPortNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnStartStop)
-                .addContainerGap(485, Short.MAX_VALUE))
+                .addContainerGap(508, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(lblTime)
-                .addGap(181, 181, 181))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -195,11 +139,7 @@ public class ServerView extends javax.swing.JFrame {
                     .addComponent(btnStartStop))
                 .addGap(18, 18, 18)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(lblTime)
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -210,15 +150,14 @@ public class ServerView extends javax.swing.JFrame {
     }//GEN-LAST:event_btnStartStopActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        // if my ServerJFrame exist
-        if (server != null) {
+       if (serverBO != null) {
             try {
-                server.stop();			// ask the server to close the conection
+                serverBO.stop();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            server = null;
-        }
+            serverBO = null;
+       }
         // dispose the frame
         dispose();
         System.exit(0);
@@ -258,31 +197,20 @@ public class ServerView extends javax.swing.JFrame {
             }
         });
     }
-    
-    public void mulaiJam() {
-        Date skrg = new Date();
-        SimpleDateFormat tgl = new SimpleDateFormat("EEEE, dd MMM yyyy");
-        SimpleDateFormat jam = new SimpleDateFormat("HH:mm");
-        lblTime.setText(jam.format(skrg)+" | "+tgl.format(skrg));
-        //timeLabel.setText(tgl.format(skrg));
-    }
-    
+
     /*
 	 * A thread to run the ServerBO
      */
     class ServerRunning extends Thread {
-        private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        
+
         @Override
         public void run() {
-            server.start();         // should execute until if fails
-            // the server failed
-            btnStartStop.setText("START");
+            serverBO.start();
+            btnStartStop.setText("Bắt đầu");
             txtPortNumber.setEditable(true);
-            
             String time = sdf.format(new Date()) + " ";
-            appendEvent(time + " Server Destroyed and Closed\n");
-            server = null;
+            appendEvent(time + " Server đã dừng.\n");
+            serverBO = null;
         }
     }
 
@@ -290,11 +218,7 @@ public class ServerView extends javax.swing.JFrame {
     private javax.swing.JButton btnStartStop;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JLabel lblTime;
-    private javax.swing.JTextArea txtChat;
     private javax.swing.JTextArea txtLog;
     private javax.swing.JTextField txtPortNumber;
     // End of variables declaration//GEN-END:variables
